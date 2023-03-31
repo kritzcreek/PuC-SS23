@@ -38,8 +38,8 @@ Im vierten Jahr Dozent fuer PuC
 Die Vorlesung wird drei wesentliche Medien verwenden:
 
 1. Slides
-    Zu Beginn der Vorlesung verbringen wir eine kurze(!) Zeit mit Slides um den Inhalt
-    der vorangegangenen Vorlesung kurz zu wiederholen.
+    Zu Beginn der Vorlesung verbringen wir eine kurze(!) Zeit mit Slides um den
+    Inhalt der vorangegangenen Vorlesung kurz zu wiederholen.
 
 2. Whiteboarding
     Dann werden wir am Whiteboard unser naechstes Thema einfuehren und besprechen.
@@ -82,13 +82,18 @@ benotet, das Projekt kann aber abgebrochen werden. (Niemand faellt "durch")
 
 ** Zeit und Ort
 
-Aktueller Plan ist die Vorlesung Freitags um 10Uhr im Raum 2100 durchzufuehren.
+Aktueller Plan ist die Vorlesung Freitags um 10 Uhr im Raum 2100 durchzufuehren.
 
 Scheinbar gibt es leider Konflikte mit Pflichtvorlesungen.
 
 - Wieviele Teilnehmer betrifft das?
 - Sollen wir versuchen einen anderen Termin zu finden?
 
+
+Konflikt mit KI Vorlesung fuer AI im 4. Semester, alternativer Termin:
+
+
+Freitag:
 ** Vorraussetzungen und Resourcen
 
 Wir werden Kotlin benutzen, ich empfehle die "Kotlin Koans" als kurze Einfuehrung:
@@ -109,6 +114,8 @@ immer dann verlinken wenn wir das entsprechende Thema besprechen.
 
   Ich (habe vor/habe nicht vor) ein Projekt abzugeben.
 
+  Ich habe/habe keinen Termin Konflikt mit der Vorlesung am Freitag um 10,
+  (wenn ja) folgende Zeitraeume sind Freitags verfuegbar.
 ** Fragen zum Organisatorischen
 
 - Was habe ich vergessen, was wollt ihr noch wissen?
