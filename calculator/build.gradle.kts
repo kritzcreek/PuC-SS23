@@ -12,9 +12,14 @@ repositories {
     mavenCentral()
 }
 
-tasks.withType<KotlinCompile>() {
-    kotlinOptions.jvmTarget = "17"
+tasks.withType<KotlinCompile> {
+    kotlinOptions.jvmTarget = "19"
+    kotlinOptions.languageVersion = "1.9"
 }
+tasks.withType<JavaCompile> {
+    targetCompatibility = "19"
+}
+
 
 application {
     mainClass.set("MainKt")

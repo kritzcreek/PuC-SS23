@@ -1,5 +1,30 @@
 import java.util.Stack
 
+fun main() {
+    // 1 + (2 * (-4))
+    val expr: Expr = Expr.Addition(
+        Expr.Literal(1),
+        Expr.Multiplication(
+            Expr.Literal(2),
+            Expr.Negation(
+                Expr.Literal(4))))
+
+    println("Recursive traversal based eval")
+    println("$expr = ${eval(expr)}")
+
+    println("Stack machine based eval")
+    val program: List<Instruction> = compile(expr)
+    println("compile(expr) = $program")
+    println("result: ${VM(program).eval()}")
+
+    // Evaluating faulty instructions crashes the stack machine
+    try {
+        VM(faultyProgram).eval()
+    } catch (e: Exception) {
+       println("faulty program failed with: $e")
+    }
+}
+
 sealed interface Expr {
     data class Addition(val left: Expr, val right: Expr): Expr
     data class Multiplication(val left: Expr, val right: Expr): Expr
@@ -14,21 +39,6 @@ fun eval(expr: Expr): Int {
         is Expr.Negation -> -(eval(expr.expr))
         is Expr.Literal -> expr.int
     }
-}
-
-fun main() {
-    val expr: Expr = Expr.Addition(
-        Expr.Literal(1),
-        Expr.Multiplication(
-            Expr.Literal(2),
-            Expr.Negation(
-                Expr.Literal(4))))
-    // println("$addition = ${eval(addition)}")
-
-    val program: List<Instruction> = compile(expr)
-    println("compile(expr) = $program")
-
-    println("Neu: ${VM(faultyProgram).eval()}")
 }
 
 fun compile(expr: Expr): List<Instruction> {
@@ -53,20 +63,11 @@ fun compile(expr: Expr): List<Instruction> {
 
 sealed interface Instruction {
     data class Const(val int: Int): Instruction
-    object Add: Instruction
-    object Mul: Instruction
-    object Neg: Instruction
+    data object Add: Instruction
+    data object Mul: Instruction
+    data object Neg: Instruction
 }
 
-val faultyProgram: List<Instruction> = listOf(
-    Instruction.Const(1),
-    Instruction.Const(2),
-    Instruction.Const(4),
-    Instruction.Neg,
-    Instruction.Mul,
-    Instruction.Add,
-    Instruction.Add
-)
 data class VM(val instructions: List<Instruction>, val stack: Stack<Int> = Stack()){
     fun eval(): Int {
         for (instruction in instructions) {
@@ -92,3 +93,14 @@ data class VM(val instructions: List<Instruction>, val stack: Stack<Int> = Stack
         return stack.pop()
     }
 }
+
+// Crashes during evaluation
+val faultyProgram: List<Instruction> = listOf(
+    Instruction.Const(1),
+    Instruction.Const(2),
+    Instruction.Const(4),
+    Instruction.Neg,
+    Instruction.Mul,
+    Instruction.Add,
+    Instruction.Add
+)
