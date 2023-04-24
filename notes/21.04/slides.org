@@ -1,0 +1,36 @@
+#+TITLE: Zweite Vorlesung
+#+DATE: 21.04.2023 PuC
+* Herzlich Willkommen zur zweiten PuC Vorlesung
+
+** Organisatorisches
+
+Falls jemand in der Vorlesung sitzt der mir noch keine E-Mail
+geschrieben hat, tut sie/er das bitte bis zur naechsten Vorlesung.
+
+** Fragen?
+
+Einmal im Ilias zeigen wo Repository zu finden ist
+
+Gibt es zum Organisatorischem noch Fragen? Auch im Bezug auf letzte
+Vorlesung.
+
+* Wiederholung
+
+Abstrakte Syntax
+
+Programme als Bäume
+
+Bäume als rekursive Datenstrukturen
+
+Reduktion von Bäumen mit Rekursion
+
+Evaluation via Stack Machine -> Alternative Repraesentation
+
+tion
+- Evaluation mittels Closures
+- Divergente Ausdruecke
+- Moegliches Projekt: Namenlose Repraesentation des LC
+
+* Church encoded numerals
+
+https://en.wikipedia.org/wiki/Church_encoding
