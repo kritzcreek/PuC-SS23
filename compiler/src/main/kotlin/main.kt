@@ -1,70 +1,54 @@
-import kotlinx.collections.immutable.persistentMapOf
+val x = Expr.Var("x")
 
-// Syntax
-sealed class Expr {
-    data class Var(val n: String) : Expr()
-    data class Lambda(val param: String, val body: Expr) : Expr()
-    data class App(val func: Expr, val arg: Expr) : Expr()
-
-    // Nicht zwingend notwendig
-    data class Lit(val n: Int) : Expr()
-}
-
-// (\f => \y => f y)(\x => y)
-// (\y => (\x => y) y)
-
-fun eval(expr: Expr): Expr {
-    return when (expr) {
-        is Expr.Lit, is Expr.Var, is Expr.Lambda -> expr
-        is Expr.App -> {
-            when (val left = eval(expr.func)) {
-                is Expr.Lambda -> {
-                    val arg = eval(expr.arg);
-                    val result = substitute(left.param, arg, left.body)
-                    eval(result)
-                }
-                is Expr.Lit, is Expr.Var, is Expr.App -> return Expr.App(left, expr.arg)
-            }
-        }
-    }
-}
-
-fun substitute(var_name: String, replacement: Expr, expr: Expr): Expr {
-    return when (expr) {
-        is Expr.App -> Expr.App(
-            substitute(var_name, replacement, expr.func),
-            substitute(var_name, replacement, expr.arg)
+// \x => f (\v => (x x) v)
+val innerZ = Expr.Lambda(
+    "x", Expr.App(
+        Expr.Var("f"), Expr.Lambda(
+            "v", Expr.App(Expr.App(x, x), Expr.Var("v"))
         )
-        is Expr.Lambda -> if (expr.param == var_name) {
-            expr
-        } else {
-            Expr.Lambda(expr.param, substitute(var_name, replacement, expr.body))
-        }
+    )
+)
+// Z = \f => (\x => f (\v => x x v)) (\x => f (\v => x x v)))
+val z = Expr.Lambda("f", Expr.App(innerZ, innerZ))
 
-        is Expr.Lit -> expr
-        is Expr.Var -> if (expr.n == var_name) {
-            replacement
-        } else {
-            expr
-        }
+// (\x => x x)
+val innerOmega = Expr.Lambda("x", Expr.App(x, x))
+// (\x => x x) (\x => x x)
+val omega = Expr.App(innerOmega, innerOmega)
+
+val isZero = Expr.Lambda("x", eq(x, int(0)))
+val faculty: Expr = Expr.Lambda(
+    "f", Expr.Lambda(
+        "n", Expr.If(
+            Expr.App(isZero, Expr.Var("n")),
+            int(1),
+            mul(Expr.Var("n"), Expr.App(Expr.Var("f"), sub(Expr.Var("n"), int(1))))
+        )
+    )
+)
+
+// fac 0 = 1
+// fac n = n * fac (n - 1)
+fun kotlinFaculty(n: Int): Int {
+    if (n == 0) {
+        return 1
     }
+    return n * kotlinFaculty(n - 1)
 }
 
+// Aufgabe fuer naechste Stunde:
+// fib 0 = 1
+// fib 1 = 1
+// fib n = fib (n - 1) + fib (n - 2)
+
+// 1 * 2 * 3 * 4
 fun main() {
-    val expr = Expr.App(
-        Expr.App(
-            Expr.Lambda("x",
-                Expr.Lambda("y",
-                    Expr.Var("y")
-                )
-            ), Expr.Lit(4)
-        ), Expr.Lit(2)
-    )
+    val expr = Expr.App(Expr.App(z, faculty), int(10))
 
-    val brokenExpr = Expr.App(Expr.Lit(4), Expr.Lit(2))
+    val brokenExpr = or(bool(true), int(10))
 
-    val result = eval(expr)
+    println("${closureEval(brokenExpr)}")
     val closureResult = closureEval(expr)
-    println("${result} = ${closureResult}")
+    println("$closureResult == ${kotlinFaculty(10)}")
 
 }
