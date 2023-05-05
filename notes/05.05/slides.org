@@ -1,0 +1,143 @@
+#+TITLE: Vierte Vorlesung
+#+DATE: 05.05.2023 PuC
+* Herzlich Willkommen
+
+* Wiederholung
+
+** Rekursion & Der Z-Kombinator
+
+Rekursion ist im Lambda Calculus kein explizites Feature. Ein Lambda kann sich nicht
+selber referenzieren.
+
+Durch _Fixpunkt Kombinatoren_ wie dem Y und Z Kombinator, koennen wir jedoch Rekursion
+selbst implementieren. Dies macht den Lambda Calculus Turing-vollstaendig.
+
+Uebung: Fibonacci Funktion
+
+** If-Ausdruecke
+
+Ein If-Ausdruck beinhaltet 3 Sub-Ausdruecke:
+
+  - Eine Bedingung
+  - Einen Then-Branch
+  - Einen Else-Branch
+
+* Konkrete Syntax
+
+Als Programmierer wollen wir unserem Compiler keine Baeume malen. Stattdessen schreiben wir
+Code in Textform.
+
+Als Compilerschreiber wollen wir trotzdem Programme weiter als Abstrakte Syntax Baeume
+verarbeiten.
+
+Also wir muessen eine Transformation von Text nach AST implementieren.
+
+Diese Transformation nennt man _Parsen_, oder die Komponente die
+die Transformation durchfuehrt, einen _Parser_.
+* Parser
+** Wie ist ein Parser aufgebaut?
+
+Parser fuer Programmiersprachen sind in der Regel in zwei Phasen aufgeteilt.
+
+Text -> AST
+
+Text -> /Tokens/ -> AST
+    ^^^^
+
+Diesen zusaetzlichen Schritt nennt man _lexikalische Analyse_ oder kurz _Lexer_.
+
+Eine gute Analogie zur natuerlichen Sprache ist, dass Grammatik nicht fuer
+einzelne Buchstaben, sondern fuer Woerter und Punktuation definiert ist.
+
+Der Lexer erkennt "Woerter" und "Punktuation" und gibt sie als einen
+Strom von Tokens aus
+
+
+** Theorie
+
+Parsing ist eine der aeltesten Informatik-Disziplinen mit tiefen Wurzeln in der
+Automatentheorie
+
+In Theoretischer Informatik habt ihr euch bereits mit Grammatiken,
+regulaeren Ausdruecken und verschiedenen Automaten (NDFA, DFA, ...)
+auseinandergesetzt.
+
+Dieses Jahr werden wir ANTLR benutzen um anhand einer
+Grammatik einen Parser zu _generieren_
+
+
+
+* Plan fuer Heute
+  - Unsere konkrete Syntax
+  - Was sind Tokens?
+  - ANTLR
+  - Lexer
+  - Parser
+
+
+* Cheatsheet
+
+===
+
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
+plugins {
+    antlr
+    kotlin("jvm") version "1.8.0"
+    application
+}
+
+group = "me.creek"
+version = "1.0-SNAPSHOT"
+
+repositories {
+    mavenCentral()
+}
+
+kotlin {
+    dependencies {
+        implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
+    }
+}
+
+dependencies {
+    antlr("org.antlr:antlr4:4.10.1")
+    implementation("org.antlr:antlr4-runtime:4.10.1")
+}
+
+tasks.generateGrammarSource {
+    arguments = arguments + listOf("-visitor", "-no-listener")
+}
+
+tasks.withType<KotlinCompile>() {
+    kotlinOptions.jvmTarget = "17"
+    dependsOn("generateGrammarSource")
+    sourceSets["main"].kotlin {
+        srcDir("generated-src/antlr/main/")
+    }
+}
+
+application {
+    mainClass.set("MainKt")
+}
+
+===
+
+grammar Puc;
+
+init: expr;
+
+===
+
+fun parseExpr(input: String): Expr {
+    val lexer = PucLexer(CharStreams.fromString(input))
+    val tokens = CommonTokenStream(lexer)
+    val parser = PucParser(tokens)
+
+    val tree = parser.init()
+    return ExprVisitor().visit(tree)
+}
+
+class ExprVisitor: PucBaseVisitor<Expr>() {
+
+===

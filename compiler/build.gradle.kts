@@ -1,6 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
+    antlr
     kotlin("jvm") version "1.8.0"
     application
 }
@@ -18,8 +19,22 @@ kotlin {
     }
 }
 
+dependencies {
+    antlr("org.antlr:antlr4:4.10.1")
+    implementation("org.antlr:antlr4-runtime:4.10.1")
+}
+
+tasks.generateGrammarSource {
+    arguments = arguments + listOf("-visitor", "-no-listener")
+}
+
 tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = "17"
+    dependsOn("generateGrammarSource")
+    sourceSets["main"].kotlin {
+        srcDir("generated-src/antlr/main/")
+    }
+
 }
 
 application {

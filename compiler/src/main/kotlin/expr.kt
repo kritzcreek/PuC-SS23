@@ -15,7 +15,7 @@ sealed class Primitive {
 }
 
 enum class Operator {
-    Add, Sub, Mul, Eq, Or
+    Add, Sub, Mul, Eq, Or, And
 }
 
 // Helpers for Expr construction

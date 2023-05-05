@@ -62,6 +62,9 @@ fun eval(env: Env, expr: Expr): Value {
 
                 Operator.Or ->
                     evalBinary<Value.Bool>(left, right) { l, r -> Value.Bool(l.b || r.b) }
+
+                Operator.And ->
+                    evalBinary<Value.Bool>(left, right) { l, r -> Value.Bool(l.b && r.b) }
             }
         }
     }
