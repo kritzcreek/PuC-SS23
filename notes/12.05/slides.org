@@ -1,0 +1,40 @@
+#+TITLE: Fuenfte Vorlesung
+#+DATE: 12.05.2023 PuC
+* Herzlich Willkommen
+
+* Wiederholung
+** Parsing
+
+Im Abstrakten beschreibt Parsen das Erkennen von Struktur in Daten.
+
+In unserem konkreten Fall sagen wir "parsen", wenn wir den Quellcode als
+Text in unseren AST ueberfuehren.
+
+Weil der Sprung von Text zu AST zu gross ist, wird der Parsing Prozess
+in zwei Schritte aufgeteilt. Einen /Lexer/ und den eigentlichen /Parser/
+
+** Der Parser
+
+Der Parser akzeptiert die durch den Lexer produzierten Tokens und
+setzt sie in unseren AST um.
+
+Hierfuer nutzen wir das ANTLR tool, einen Parsergenerator. Wir
+beschreiben unsere Grammatik in einer EBNF nahen DSL (Fuer ANTLR ist
+das das .g4 Format).
+
+ANTLR nimmt dann diese Beschreibung und generiert Java Code der Text
+anhand der Grammatik erkennt und in einen Baum ueberfuehrt.
+
+** Ueberfuehren in unseren AST
+
+ANTLR generiert eine "generische" Baumstruktur, die wir erst noch in
+unseren eigenen AST Datentyp uberfuehren muessen. Dafuer verwenden
+wir einen von ANTLR generierten Visitor.
+
+** Plan fuer Heute
+
+- QoL features fuer unsere Programmiersprache
+  - Toplevel functions (recursive)
+  - Strings
+  - Input/Output
+  - Built-in functions
