@@ -17,14 +17,14 @@ fun closureEval(prog: Prog): Value {
     return Evaluator(prog.defs).eval(emptyEnv, prog.expr)
 }
 
-data class BuiltIn(val name: String, val arity: Int)
+data class BuiltIn(val name: String, val arity: Int, val type: Type)
 
 val builtIns = listOf(
-    BuiltIn("int_to_string", 1),
-    BuiltIn("print", 1),
-    BuiltIn("read_int", 1),
+    BuiltIn("int_to_string", 1, parseType("Integer -> Text")),
+    BuiltIn("print", 1, parseType("Text -> Text")),
+    BuiltIn("read_int", 1, parseType("Text -> Integer")),
     // TODO: Besserer Name
-    BuiltIn("str_eq", 2),
+    BuiltIn("str_eq", 2, parseType("Text -> Text -> Bool")),
 )
 
 class Evaluator(defs: List<Def>) {
@@ -37,7 +37,7 @@ class Evaluator(defs: List<Def>) {
             val value = (2..builtIn.arity)
                 .map { "param$it" }
                 .fold<String, Expr>(Expr.Builtin(builtIn.name)) { acc, param ->
-                    Expr.Lambda(param, acc)
+                    Expr.Lambda(param, Type.Integer, acc)
                 }
             topLevelMut[builtIn.name] = Value.Closure(emptyEnv, "param1", value)
         }

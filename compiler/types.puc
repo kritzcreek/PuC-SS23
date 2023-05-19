@@ -1,0 +1,3 @@
+def plusOne(x : Integer) : Integer => "Hallo"
+
+plusOne(read_int("hi"))

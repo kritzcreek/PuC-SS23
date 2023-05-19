@@ -11,6 +11,13 @@ fun parseFile(fileName: String): Prog {
     return parseInner(lexer)
 }
 
+fun parseType(input: String): Type {
+    val lexer = PucLexer(CharStreams.fromString(input))
+    val tokens = CommonTokenStream(lexer)
+    val parser = PucParser(tokens)
+    return TypeVisitor().visit(parser.type())
+}
+
 fun parseInner(lexer: PucLexer): Prog {
     val tokens = CommonTokenStream(lexer)
     val parser = PucParser(tokens)
@@ -20,10 +27,40 @@ fun parseInner(lexer: PucLexer): Prog {
     return Prog(defs, expr)
 }
 
+class TypeVisitor(): PucBaseVisitor<Type>() {
+    override fun visitTyBool(ctx: PucParser.TyBoolContext?): Type {
+        return Type.Bool
+    }
+
+    override fun visitTyInt(ctx: PucParser.TyIntContext?): Type {
+        return Type.Integer
+    }
+
+    override fun visitTyText(ctx: PucParser.TyTextContext?): Type {
+        return Type.Text
+    }
+
+    override fun visitTyParenthesized(ctx: PucParser.TyParenthesizedContext): Type {
+        return visit(ctx.inner)
+    }
+
+    override fun visitTyFun(ctx: PucParser.TyFunContext): Type {
+        val tyArg = visit(ctx.arg)
+        val tyResult = visit(ctx.result)
+        return Type.Function(tyArg, tyResult)
+    }
+}
+
 class ExprVisitor(val defs: MutableList<Def>): PucBaseVisitor<Expr>() {
 
     override fun visitDef(ctx: PucParser.DefContext): Expr {
-        defs.add(Def(ctx.NAME().text, this.visit(ctx.expr())))
+        val name = ctx.name.text
+        val param = ctx.param.text
+        val tyParam = TypeVisitor().visit(ctx.tyParam)
+        val tyResult = TypeVisitor().visit(ctx.tyResult)
+        val body = this.visit(ctx.body)
+        val def = Def(name, Expr.Lambda(param, tyParam, body), Type.Function(tyParam, tyResult))
+        defs.add(def)
         return super.visitDef(ctx)
     }
 
@@ -52,8 +89,9 @@ class ExprVisitor(val defs: MutableList<Def>): PucBaseVisitor<Expr>() {
 
     override fun visitLambda(ctx: PucParser.LambdaContext): Expr {
         val param = ctx.param.text
+        val tyParam = TypeVisitor().visit(ctx.tyParam)
         val body = this.visit(ctx.body)
-        return Expr.Lambda(param, body)
+        return Expr.Lambda(param, tyParam, body)
     }
 
     override fun visitApp(ctx: PucParser.AppContext): Expr {

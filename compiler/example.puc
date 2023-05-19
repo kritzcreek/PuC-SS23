@@ -1,4 +1,4 @@
-def countdown: fn x =>
+def countdown(x : Integer) : Text =>
     if str_eq(int_to_string(x))("0") then
         print("BOOM!")
     else
