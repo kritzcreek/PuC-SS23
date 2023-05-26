@@ -6,4 +6,4 @@ def countdown(x : Integer) : Text =>
         let _ = print(printedInt) in
         countdown(x - 1)
 
-countdown(read_int("Countdown"))
+countdown(3)

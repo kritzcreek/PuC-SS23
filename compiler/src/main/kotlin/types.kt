@@ -19,10 +19,10 @@ class Typechecker {
         val builtinCtx: Context = builtIns.fold(persistentHashMapOf()) { acc, def ->
             acc.put(def.name, def.type)
         }
-        val ctx: Context = prog.defs.fold(builtinCtx) { acc, def ->
+        val ctx: Context = prog.fnDefs.fold(builtinCtx) { acc, def ->
             acc.put(def.name, def.ty)
         }
-        prog.defs.forEach { def ->
+        prog.fnDefs.forEach { def ->
             val tyExpr = infer(ctx, def.expr)
             equalType("When inferring a definition", tyExpr, def.ty)
         }
@@ -49,6 +49,7 @@ class Typechecker {
                     Operator.Add,
                     Operator.Sub,
                     Operator.Mul,
+                    Operator.Div,
                     Operator.Eq -> {
                         val tyLeft = infer(ctx, expr.left)
                         val tyRight = infer(ctx, expr.right)
@@ -107,6 +108,8 @@ class Typechecker {
             }
 
             is Expr.Var -> ctx[expr.n] ?: throw Error("Unknown variable ${expr.n}")
+            is Expr.Construction -> TODO()
+            is Expr.Case -> TODO()
         }
     }
 

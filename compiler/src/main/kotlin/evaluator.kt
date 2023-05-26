@@ -9,12 +9,13 @@ sealed class Value {
     data class Bool(val value: Boolean) : Value()
     data class Text(val value: String) : Value()
     data class Closure(val env: Env, val param: String, val body: Expr) : Value()
+    data class Struct(val tag: String, val fields: List<Value>) : Value()
 }
 
 val emptyEnv: Env = persistentMapOf()
 
 fun closureEval(prog: Prog): Value {
-    return Evaluator(prog.defs).eval(emptyEnv, prog.expr)
+    return Evaluator(prog.fnDefs).eval(emptyEnv, prog.expr)
 }
 
 data class BuiltIn(val name: String, val arity: Int, val type: Type)
@@ -27,7 +28,7 @@ val builtIns = listOf(
     BuiltIn("str_eq", 2, parseType("Text -> Text -> Bool")),
 )
 
-class Evaluator(defs: List<Def>) {
+class Evaluator(fnDefs: List<FnDef>) {
 
     var topLevel: PersistentMap<String, Value>
 
@@ -43,7 +44,7 @@ class Evaluator(defs: List<Def>) {
         }
         topLevel = topLevelMut.toPersistentHashMap()
 
-        defs.forEach { topLevel = topLevel.put(it.name, eval(emptyEnv, it.expr)) }
+        fnDefs.forEach { topLevel = topLevel.put(it.name, eval(emptyEnv, it.expr)) }
     }
 
     fun eval(env: Env, expr: Expr): Value {
@@ -56,7 +57,7 @@ class Evaluator(defs: List<Def>) {
                         eval(newEnv, closure.body)
                     }
 
-                    is Value.Integer, is Value.Bool, is Value.Text -> throw Error("${closure} is not a function")
+                    else -> throw Error("${closure} is not a function")
                 }
             }
 
@@ -92,6 +93,9 @@ class Evaluator(defs: List<Def>) {
 
                     Operator.Mul ->
                         evalBinary<Value.Integer>(left, right) { l, r -> Value.Integer(l.value * r.value) }
+
+                    Operator.Div ->
+                        evalBinary<Value.Integer>(left, right) { l, r -> Value.Integer(l.value / r.value) }
 
                     Operator.Eq ->
                         evalBinary<Value.Integer>(left, right) { l, r -> Value.Bool(l.value == r.value) }
@@ -139,7 +143,48 @@ class Evaluator(defs: List<Def>) {
                 val bound = eval(env, expr.bound)
                 eval(env.put(expr.name, bound), expr.body)
             }
+
+            is Expr.Construction -> {
+                val fields = expr.fields.map { eval(env, it) }
+                Value.Struct("${expr.type}.${expr.name}", fields)
+            }
+
+            is Expr.Case -> {
+                val scrutinee = eval(env, expr.scrutinee)
+                when (scrutinee) {
+                    is Value.Struct -> {
+                        for (branch in expr.branches) {
+                            val bindings = matchPattern(branch.pattern, scrutinee)
+                            if (bindings != null) {
+                                val newEnv =
+                                    bindings.fold(env) { acc, (name, value) ->
+                                        acc.put(name, value)
+                                    }
+                                return eval(newEnv, branch.body)
+                            }
+                        }
+                        throw Error("Failed to match $scrutinee")
+                    }
+                    else -> throw Error("Can't case on non-structs")
+                }
+            }
         }
+    }
+
+    fun matchPattern(pattern: Pattern, scrutinee: Value.Struct): List<Pair<String, Value>>? {
+        when (pattern) {
+            is Pattern.Constructor -> {
+                val tag = "${pattern.type}.${pattern.name}"
+                if (tag == scrutinee.tag) {
+                    if (scrutinee.fields.size == pattern.fields.size) {
+                        return pattern.fields.zip(scrutinee.fields)
+                    } else {
+                        throw Error("Mismatched field count in pattern: expected: ${pattern.fields.size}, actual: ${scrutinee.fields.size}")
+                    }
+                }
+            }
+        }
+        return null
     }
 
     inline fun <reified T> evalBinary(left: Value, right: Value, f: (T, T) -> Value): Value {
