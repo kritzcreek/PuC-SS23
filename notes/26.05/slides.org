@@ -1,0 +1,65 @@
+#+TITLE: Siebte Vorlesung
+#+DATE: 26.05.2023 PuC
+* Herzlich Willkommen
+
+* Wiederholung
+** Laufzeitfehler vermeiden
+
+Unsere Syntax erlaubt es uns Programme zu schreiben die zur
+Laufzeit keine Bedeutung haben/crashen.
+
+| Programm              | Fehler                 |
+|-----------------------+------------------------|
+| (fn x => y)(10)       | Unbound variable 'y'   |
+|-----------------------+------------------------|
+| true + 10             | 'true' is not an Int   |
+|-----------------------+------------------------|
+| if 10 then 20 else 30 | '10' is not a Boolean  |
+|-----------------------+------------------------|
+| (20 + 3)(true)        | '23' is not a function |
+
+Mithilfe unseres Typecheckers koennen wir diese erkennen
+_bevor_ wir das Program ausfuehren.
+
+** Typen in unserer Programmiersprache
+
+#+begin_src
+t :=
+   // Primitive Typen:
+   | Integer
+   | Boolean
+   | Text
+
+   // Funktionstypen:
+   | t -> t
+#+end_src
+
+Beispiele:
+
+Text -> Boolean
+Int -> Text -> Text
+(Int -> Int) -> Int -> Int
+
+** Typing Judgements
+
+Typing Judgements nutzen die Notation des "Natuerlichen Schliessens"
+oder der "Natural Deduction". Ein Beispiel:
+
+                              B   C
+                              -----
+                                A
+
+Dieses Judgement besagt, das wir wenn wir A zeigen/beweisen wollen, B und C
+zeigen muessen.
+
+Beispiel:
+(fn x : Integer => fn y : Boolean => x)(10)(true) : Integer
+
+* Algebraische Datentypen (ADTs)
+
+Um in unserer Sprache komplexere Programme schreiben zu koennen wollen
+wir in der Lage sein unsere eigenen Datentypen zu verwenden.
+
+- Sum/Product types
+
+- Konstruktion/Destruktion

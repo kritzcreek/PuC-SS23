@@ -1,0 +1,9 @@
+def eval(expr: Expr) : Integer =>
+  case expr {
+    of Expr.Lit(n) => n
+    of Expr.Add(x, y) => eval(x) + eval(y)
+    of Expr.Mul(x, y) => eval(x) * eval(y)
+  }
+
+let expr = Expr.Add(Expr.Lit(1), Expr.Mul(Expr.Lit(2), Expr.Lit(4))) in
+eval(expr)

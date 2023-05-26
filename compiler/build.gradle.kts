@@ -14,6 +14,7 @@ repositories {
 }
 
 kotlin {
+    jvmToolchain(19)
     dependencies {
         implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
     }
@@ -29,7 +30,6 @@ tasks.generateGrammarSource {
 }
 
 tasks.withType<KotlinCompile>() {
-    kotlinOptions.jvmTarget = "17"
     dependsOn("generateGrammarSource")
     sourceSets["main"].kotlin {
         srcDir("generated-src/antlr/main/")
