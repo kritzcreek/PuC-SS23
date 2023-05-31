@@ -45,36 +45,24 @@ class Typechecker {
             }
 
             is Expr.Binary -> {
-                when (expr.op) {
+                val (left, right, result) = when (expr.op) {
                     Operator.Add,
                     Operator.Sub,
                     Operator.Mul,
-                    Operator.Div,
-                    Operator.Eq -> {
-                        val tyLeft = infer(ctx, expr.left)
-                        val tyRight = infer(ctx, expr.right)
-                        equalType("as the left operand of ${expr.op}", tyLeft, Type.Integer)
-                        equalType("as the right operand of ${expr.op}", tyRight, Type.Integer)
-                        Type.Integer
-                    }
+                    Operator.Div -> Triple(Type.Integer, Type.Integer, Type.Integer)
+
+                    Operator.Eq -> Triple(Type.Integer, Type.Integer, Type.Bool)
 
                     Operator.Or,
-                    Operator.And -> {
-                        val tyLeft = infer(ctx, expr.left)
-                        val tyRight = infer(ctx, expr.right)
-                        equalType("as the left operand of ${expr.op}", tyLeft, Type.Bool)
-                        equalType("as the right operand of ${expr.op}", tyRight, Type.Bool)
-                        Type.Bool
-                    }
+                    Operator.And -> Triple(Type.Bool, Type.Bool, Type.Bool)
 
-                    Operator.Concat -> {
-                        val tyLeft = infer(ctx, expr.left)
-                        val tyRight = infer(ctx, expr.right)
-                        equalType("as the left operand of ${expr.op}", tyLeft, Type.Text)
-                        equalType("as the right operand of ${expr.op}", tyRight, Type.Text)
-                        Type.Text
-                    }
+                    Operator.Concat -> Triple(Type.Text, Type.Text, Type.Text)
                 }
+                val tyLeft = infer(ctx, expr.left)
+                val tyRight = infer(ctx, expr.right)
+                equalType("as the left operand of ${expr.op}", tyLeft, left)
+                equalType("as the right operand of ${expr.op}", tyRight, right)
+                result
             }
 
             is Expr.Builtin -> throw Error("Should not need to infer a Builtin")

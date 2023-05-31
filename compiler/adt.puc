@@ -19,7 +19,7 @@ def print_helper(list: List): Text =>
       of List.Cons(h, t) => ", " ++ int_to_string(h) ++ print_helper(t)
     }
 
-def filter(f: Integer -> Boolean): List -> List => fn list : List =>
+def filter(f: Integer -> Bool): List -> List => fn list : List =>
   case list {
     of List.Nil() => list
     of List.Cons(h, t) =>
