@@ -10,6 +10,11 @@ sealed class Value {
     data class Text(val value: String) : Value()
     data class Closure(val env: Env, val param: String, val body: Expr) : Value()
     data class Struct(val tag: String, val fields: List<Value>) : Value()
+
+    inline fun <reified T> castAs(): T {
+        return this as? T
+            ?: throw Error("Expected a ${T::class.simpleName} but got ${this.javaClass.simpleName}")
+    }
 }
 
 val emptyEnv: Env = persistentMapOf()
@@ -50,15 +55,10 @@ class Evaluator(fnDefs: List<FnDef>) {
     fun eval(env: Env, expr: Expr): Value {
         return when (expr) {
             is Expr.App -> {
-                when (val closure = eval(env, expr.func)) {
-                    is Value.Closure -> {
-                        val arg = eval(env, expr.arg)
-                        val newEnv = closure.env.put(closure.param, arg)
-                        eval(newEnv, closure.body)
-                    }
-
-                    else -> throw Error("${closure} is not a function")
-                }
+                val closure = eval(env, expr.func).castAs<Value.Closure>()
+                val arg = eval(env, expr.arg)
+                val newEnv = closure.env.put(closure.param, arg)
+                eval(newEnv, closure.body)
             }
 
             is Expr.Lambda -> Value.Closure(env, expr.param, expr.body)
@@ -73,7 +73,7 @@ class Evaluator(fnDefs: List<FnDef>) {
                 ?: throw Exception("Unbound variable ${expr.n}")
 
             is Expr.If -> {
-                val cond = eval(env, expr.condition) as? Value.Bool ?: throw Error("Is not a boolean")
+                val cond = eval(env, expr.condition).castAs<Value.Bool>()
                 if (cond.value) {
                     eval(env, expr.thenBranch)
                 } else {
@@ -113,26 +113,26 @@ class Evaluator(fnDefs: List<FnDef>) {
 
             is Expr.Builtin -> when (expr.name) {
                 "int_to_string" -> {
-                    val int = env["param1"]!! as? Value.Integer ?: throw Error("Expected an Int")
+                    val int = env["param1"]!!.castAs<Value.Integer>()
                     Value.Text(int.value.toString())
                 }
 
                 "print" -> {
-                    val text = env["param1"]!! as? Value.Text ?: throw Error("Expected an Text")
+                    val text = env["param1"]!!.castAs<Value.Text>()
                     println(text.value)
                     text
                 }
 
                 "read_int" -> {
-                    val prompt = env["param1"]!! as? Value.Text ?: throw Error("Expected an Text")
+                    val prompt = env["param1"]!!.castAs<Value.Text>()
                     print(prompt.value + ": ")
                     val line = readln()
                     Value.Integer(line.toInt())
                 }
 
                 "str_eq" -> {
-                    val left = env["param1"]!! as? Value.Text ?: throw Error("Expected an Text")
-                    val right = env["param2"]!! as? Value.Text ?: throw Error("Expected an Text")
+                    val left = env["param1"]!!.castAs<Value.Text>()
+                    val right = env["param2"]!!.castAs<Value.Text>()
                     Value.Bool(left.value == right.value)
                 }
 
@@ -150,23 +150,18 @@ class Evaluator(fnDefs: List<FnDef>) {
             }
 
             is Expr.Case -> {
-                val scrutinee = eval(env, expr.scrutinee)
-                when (scrutinee) {
-                    is Value.Struct -> {
-                        for (branch in expr.branches) {
-                            val bindings = matchPattern(branch.pattern, scrutinee)
-                            if (bindings != null) {
-                                val newEnv =
-                                    bindings.fold(env) { acc, (name, value) ->
-                                        acc.put(name, value)
-                                    }
-                                return eval(newEnv, branch.body)
+                val scrutinee = eval(env, expr.scrutinee).castAs<Value.Struct>()
+                for (branch in expr.branches) {
+                    val bindings = matchPattern(branch.pattern, scrutinee)
+                    if (bindings != null) {
+                        val newEnv =
+                            bindings.fold(env) { acc, (name, value) ->
+                                acc.put(name, value)
                             }
-                        }
-                        throw Error("Failed to match $scrutinee")
+                        return eval(newEnv, branch.body)
                     }
-                    else -> throw Error("Can't case on non-structs")
                 }
+                throw Error("Failed to match $scrutinee")
             }
         }
     }
@@ -187,11 +182,8 @@ class Evaluator(fnDefs: List<FnDef>) {
         return null
     }
 
-    inline fun <reified T> evalBinary(left: Value, right: Value, f: (T, T) -> Value): Value {
-        val leftCasted = left as? T ?: throw Error("Expected a ${T::class.simpleName} but got $left")
-        val rightCasted = right as? T ?: throw Error("Expected a ${T::class.simpleName} but got $right")
-        return f(leftCasted, rightCasted)
-    }
+    inline fun <reified T> evalBinary(left: Value, right: Value, f: (T, T) -> Value): Value =
+        f(left.castAs<T>(), right.castAs<T>())
 }
 
 
