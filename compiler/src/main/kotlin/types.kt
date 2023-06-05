@@ -5,6 +5,7 @@ typealias Context = PersistentMap<String, Type>
 
 class Typechecker {
 
+    var typeDefs: List<TypeDef> = listOf()
     val errors: MutableList<String> = mutableListOf()
 
     fun error(msg: String) = errors.add(msg)
@@ -16,6 +17,7 @@ class Typechecker {
     }
 
     fun inferProg(prog: Prog): Pair<Type, List<String>> {
+        typeDefs = prog.typeDefs
         val builtinCtx: Context = builtIns.fold(persistentHashMapOf()) { acc, def ->
             acc.put(def.name, def.type)
         }
@@ -96,9 +98,44 @@ class Typechecker {
             }
 
             is Expr.Var -> ctx[expr.n] ?: throw Error("Unknown variable ${expr.n}")
-            is Expr.Construction -> TODO()
-            is Expr.Case -> TODO()
+            is Expr.Construction -> {
+                val tyFields = expr.fields.map { infer(ctx, it) }
+                lookupConstructor(expr.type, expr.name, tyFields).forEach { (actual, expected) ->
+                    equalType("", actual, expected)
+                }
+                return Type.Constructor(expr.type)
+            }
+            is Expr.Case -> {
+                val tyScrutinee = infer(ctx, expr.scrutinee)
+                expr.branches.map {
+                    val newCtx: Context = matchPattern(ctx, it.pattern, tyScrutinee)
+                    infer(newCtx, it.body)
+                }.reduce { ty1, ty2 ->
+                    equalType("", ty1, ty2)
+                    ty1
+                }
+            }
         }
+    }
+
+    private fun matchPattern(ctx: Context, pattern: Pattern, ty: Type): Context {
+        return when (pattern) {
+            is Pattern.Constructor -> {
+                equalType("", Type.Constructor(pattern.type), ty)
+                lookupConstructor(pattern.type, pattern.name, pattern.fields).fold(ctx) { acc, (field, ty) ->
+                    acc.put(field, ty)
+                }
+            }
+        }
+    }
+
+    private fun <X> lookupConstructor(type: String, name: String, xs : List<X>): List<Pair<X, Type>> {
+        val typeDef = typeDefs.find { it.name == type } ?: throw Error("Unknown type $type")
+        val constr = typeDef.constructors.find { it.name == name } ?: throw Error("Unknown constructor $type.$name")
+        if (xs.size != constr.fields.size) {
+            throw Error("Mismatched fields for $type.$name, expected ${constr.fields.size} but got ${xs.size}")
+        }
+        return xs.zip(constr.fields)
     }
 
 }

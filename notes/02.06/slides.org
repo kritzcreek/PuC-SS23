@@ -1,0 +1,125 @@
+#+TITLE: Achte Vorlesung
+#+DATE: 02.06.2023 PuC
+* Herzlich Willkommen
+
+* Wiederholung
+** Algebraische Daten Typen (ADTs)
+
+Um in unserer Sprache komplexere Programme schreiben zu koennen wollen
+wir in der Lage sein unsere eigenen Datentypen zu verwenden.
+
+Diese Datentypen kombinieren andere Datentypen als Produkt und/oder Summe.
+
+** Kardinalitaet von Daten Typen
+
+Wenn wir ueber Typen als Menge von Werten nachdenken, koennen wir die Anzahl
+der moeglichen Werte fuer einen gegebenen Typen bestimmen. Diese nennen wir die
+Kardinalitaet eines Typens:
+
+type Unit = U()
+K(Unit) = 1
+
+** Kardinalitaet Beispiele
+
+type Bool = True() | False()
+K(Bool) = 2
+
+type Direction = North() | South() | West() | East()
+K(Direction) = 4
+
+type DirOrBool = B(Bool) | D(Direction)
+K(DirOrBool) = 6
+
+type TwoBool = TB(Bool, Bool)
+K(TwoBool) = 4
+
+type ThreeBool = TB(Bool, Bool, Bool)
+K(ThreeBool) = 8
+
+type Complicated = TB(ThreeBool, Bool) | TB(TwoBool)
+K(Complicated) = 20
+** Konstruktion und Dekonstruktion
+
+Um ADTs in unseren Expressions zu verwenden haben wir zwei
+neue Syntaxknoten hinzugefuegt:
+
+Konstruktion:
+
+List.Cons(1, List.Nil())
+
+Dekonstruktion:
+
+case list {
+  of List.Cons(h, t) => h
+  of List.Nil() => 0
+}
+
+
+* Typechecking von ADTs
+
+Bei der Konstruktion muessen wir sicherstellen, dass alle Felder den
+richtigen Typen haben, und die richtige Anzahl an Feldern uebergeben wird:
+
+type MyType = MyCons(Text)
+
+MyType.MyCons(10) // Expected a Text but got Integer
+MyType.MyCons(10, "hi") // Expected 1 argument but got 2 when
+                           constructing MyType.MyCons
+
+Bei der Dekonstruktion muessen wir dem Kontext alle neu gebundenen Variablen
+hinzufuegen und sicherstellen, dass alle case branches den selben Type zurueckgeben:
+
+case list {
+  of List.Cons(h, t) => h
+  of List.Nil() => "Hi" // Expected an Integer but got Text
+}
+
+* Projekte
+
+Ich akzeptiere ab heute Projektvorschlaege.  Alle Themen muessen von mir
+"abgesegnet" werden, daher ist es besser wenn die Projekte in der Vorlesung
+vergeben werden. Notfalls koennen wir uns auch per Mail absprechen.
+
+Rahmenbedingungen:
+- 1-2 Student*innen pro Team
+- Thema das mit PuC zu tun hat
+- Am Ende 15min Praesentation (10min Slides/Erklaerung + 5min Demo)
+- Jede Praesentation muss lauffaehigen Code demonstrieren
+
+Praesentationsdatum:
+
+Ende Pruefungszeitraum Freitag der 14.07
+=> Praesentationen in der Woche vom 17.07
+
+* Projektliste
+
+Visualisieren von Lambda Ausdruecken als Baeume
+
+Eine Option: https://d2lang.com/
+- Angela Kolless
+- ?
+
+Pretty Printer
+- Luca Brabender
+- ?
+
+Syntax Highlighting (LSP SemanticTokenProvider)
+- Tim Koehne
+- Fabian Juelich
+
+Rust Borrowchecker (Code lineares typ system?)
+- Julian Heidenreich
+- Marek Dahmen
+
+Transpiler (PuClang -> ?)
+- Justin Dax
+- Rene Haar
+
+Stack Machine with Calls in C
+Literature: (https://craftinginterpreters.com/)
+- Jiyon Park
+- ?
+
+Syntax fuer Listen, std lib fuer Listen, evtl. polymorphe Liste
+- Ronan Hesselschwerdt
+- ?
