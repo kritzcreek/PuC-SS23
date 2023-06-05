@@ -37,11 +37,15 @@ class ProgVisitor(): PucBaseVisitor<Prog>() {
 class FnDefVisitor(): PucBaseVisitor<FnDef>() {
     override fun visitFnDef(ctx: PucParser.FnDefContext): FnDef {
         val name = ctx.name.text
-        val param = ctx.param.text
-        val tyParam = TypeVisitor().visit(ctx.tyParam)
+        val params = ctx.fnParam().map {
+            it.param.text to TypeVisitor().visit(it.tyParam)
+        }
+
         val tyResult = TypeVisitor().visit(ctx.tyResult)
         val body = ExprVisitor().visit(ctx.body)
-        return FnDef(name, Expr.Lambda(param, tyParam, body), Type.Function(tyParam, tyResult))
+        val expr = params.reversed().fold(body) { acc, (param, tyParam) -> Expr.Lambda(param, tyParam, acc) }
+        val ty = params.reversed().fold(tyResult) { acc, (_, ty) -> Type.Function(ty, acc) }
+        return FnDef(name, expr, ty)
     }
 }
 

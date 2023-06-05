@@ -4,9 +4,10 @@ init: prog;
 
 prog: (fnDef | typeDef)* expr;
 
-fnDef: 'def' name=NAME '(' param=NAME ':' tyParam=type ')' ':' tyResult=type '=>' body=expr;
+fnDef: 'def' name=NAME '(' fnParam (',' fnParam)* ')' ':' tyResult=type '=>' body=expr;
 typeDef: 'type' name=UP_NAME '=' typeConstructor ('|' typeConstructor)*;
 typeConstructor: constr=UP_NAME '(' (type (',' type)*)? ')';
+fnParam: param=NAME ':' tyParam=type;
 
 atom
   : NAME # Var
