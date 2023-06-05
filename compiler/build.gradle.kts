@@ -14,7 +14,7 @@ repositories {
 }
 
 kotlin {
-    jvmToolchain(19)
+    jvmToolchain(17)
     dependencies {
         implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable:0.3.5")
     }

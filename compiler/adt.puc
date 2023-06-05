@@ -1,9 +1,36 @@
-def eval(expr: Expr) : Integer =>
-  case expr {
-    of Expr.Lit(n) => n
-    of Expr.Add(x, y) => eval(x) + eval(y)
-    of Expr.Mul(x, y) => eval(x) * eval(y)
+
+type List = Cons(Integer, List) | Nil()
+
+def range(from : Integer): Integer -> List => fn to : Integer =>
+   if from == to then
+     List.Nil()
+   else
+     List.Cons(from, range(from + 1)(to))
+
+def print_list(list: List): Text =>
+  case list {
+    of List.Nil() => "[]"
+    of List.Cons(h, t) => "[" ++ int_to_string(h) ++ print_helper(t) ++ "]"
   }
 
-let expr = Expr.Add(Expr.Lit(1), Expr.Mul(Expr.Lit(2), Expr.Lit(4))) in
-eval(expr)
+def print_helper(list: List): Text =>
+    case list {
+      of List.Nil() => ""
+      of List.Cons(h, t) => ", " ++ int_to_string(h) ++ print_helper(t)
+    }
+
+def filter(f: Integer -> Bool): List -> List => fn list : List =>
+  case list {
+    of List.Nil() => list
+    of List.Cons(h, t) =>
+      if f(h) then
+        List.Cons(h, filter(f)(t))
+      else
+        filter(f)(t)
+  }
+
+let is_even = fn x : Integer => (x / 2) * 2 == x in
+let list = range(0)(read_int("To")) in
+let filtered = filter(is_even)(list) in
+let _ = print(print_list(filtered)) in
+0
