@@ -1,0 +1,56 @@
+#+TITLE: Neunte Vorlesung
+#+DATE: 09.06.2023 PuC
+* Herzlich Willkommen
+
+* Wiederholung
+
+Type checking fuer ADTs und Case-Expressions
+
+* Typinferenz via Unifikation
+
+Inferenz fuer unsere Sprache erfolgt indem wir _Syntax gesteuert_ ueber
+unseren AST laufen (via Rekursion) und Gleichheits-Constraints sammeln.
+
+Wann immer wir einen Typ erst spaeter im Inferenz Vorgang herausfinden
+koennen erzeugen wir einen "Unknown" Typ und ersetzen diesen spaeter mit
+seiner Loesung.
+(Auch Metavariable, oder Unifikationsvariable genannt)
+
+Als Loesungsalgorithmus fuer diese Constraints verwenden wir Unifikation.
+
+* Projektliste
+
+Visualisieren von Lambda Ausdruecken als Baeume
+
+Eine Option: https://d2lang.com/
+- Angela Kolless
+- Luca Brabender
+
+Syntax Highlighting (LSP SemanticTokenProvider)
+- Tim Koehne
+- Fabian Juelich
+
+Rust Borrowchecker (Code lineares typ system?)
+- Julian Heidenreich
+- Marek Dahmen
+
+Transpiler mittels Txl (PuClang -> JS)
+- Justin Dax
+- Rene Haar
+
+Stack Machine with Calls in C
+Literature: (https://craftinginterpreters.com/)
+- Jiyon Park
+- ?
+
+Syntax fuer Listen, std lib fuer Listen, evtl. polymorphe Liste
+- Ronan Hesselschwerdt
+- ?
+
+DSL zum spezifieren und loesen von linearen Gleichungssystemen
+- Sarah Langrehr
+- ?
+
+Logische Programmiersprache
+- Leon Pueschel
+- Leander Gerwing

@@ -14,7 +14,7 @@ atom
   | INT # IntLit
   | BOOL_LIT # BoolLit
   | TEXT_LIT # TextLit
-  | 'fn' param=NAME ':' tyParam=type '=>' body=expr # Lambda
+  | 'fn' param=NAME (':' tyParam=type)? '=>' body=expr # Lambda
   | fn=atom '(' arg=expr ')' # App
   | '(' inner=expr ')' # Parenthesized
   | 'if' condition=expr 'then' thenBranch=expr 'else' elseBranch=expr # If

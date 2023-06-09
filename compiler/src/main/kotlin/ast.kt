@@ -5,8 +5,7 @@ data class TypeDef(val name: String, val constructors: List<TypeConstructor>)
 data class TypeConstructor(val name: String, val fields: List<Type>)
 
 sealed class Expr {
-    data class Var(val n: String) : Expr()
-    data class Lambda(val param: String, val tyParam: Type, val body: Expr) : Expr()
+    data class Var(val n: String) : Expr()data class Lambda(val param: String, val tyParam: Type?, val body: Expr) : Expr()
     data class App(val func: Expr, val arg: Expr) : Expr()
     data class If(val condition: Expr, val thenBranch: Expr, val elseBranch: Expr) : Expr()
     data class Binary(val left: Expr, val op: Operator, val right: Expr) : Expr()
@@ -41,6 +40,7 @@ sealed class Type {
     object Bool : Type()
     data class Constructor(val name: String) : Type()
     data class Function(val arg: Type, val result: Type) : Type()
+    data class Unknown(val u: Int) : Type()
 
     fun print(): String = printInner(false)
 
@@ -54,6 +54,16 @@ sealed class Type {
                 val inner = "${arg.printInner(true)} -> ${result.printInner(false)}"
                 if (nested) "($inner)" else inner
             }
+
+            is Unknown -> "u$u"
+        }
+    }
+
+    fun unknowns(): Set<Int> {
+        return when (this) {
+            Bool, is Constructor, Integer, Text -> setOf()
+            is Function -> arg.unknowns().union(result.unknowns())
+            is Unknown -> setOf(u)
         }
     }
 }

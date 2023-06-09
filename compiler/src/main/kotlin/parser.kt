@@ -126,7 +126,7 @@ class ExprVisitor(): PucBaseVisitor<Expr>() {
 
     override fun visitLambda(ctx: PucParser.LambdaContext): Expr {
         val param = ctx.param.text
-        val tyParam = TypeVisitor().visit(ctx.tyParam)
+        val tyParam = ctx.tyParam?.let{ TypeVisitor().visit(it) }
         val body = this.visit(ctx.body)
         return Expr.Lambda(param, tyParam, body)
     }

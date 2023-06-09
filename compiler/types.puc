@@ -1,3 +1,7 @@
-def plusOne(x : Integer) : Integer => "Hallo"
+type List = Cons(Integer, List) | Nil()
 
-plusOne(read_int("hi"))
+let f = fn x => case List.Cons(3, List.Nil()) {
+  of List.Nil() => x
+  of List.Cons(h, t) => h
+} in
+f(true)

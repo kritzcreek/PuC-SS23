@@ -1,5 +1,5 @@
 fun main() {
-    val parsed = parseFile("adt.puc")
+    val parsed = parseFile("types.puc")
     val (type, errors) = Typechecker().inferProg(parsed)
     errors.forEach { println(it) }
     val evaled = closureEval(parsed)

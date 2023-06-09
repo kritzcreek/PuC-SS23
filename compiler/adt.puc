@@ -28,7 +28,7 @@ def filter(f : Integer -> Bool, list : List) : List =>
         filter(f)(t)
   }
 
-let is_even = fn x : Integer => (x / 2) * 2 == x in
+let is_even = fn x => (x / 2) * 2 == x in
 let list = range(0)(read_int("To")) in
 let filtered = filter(is_even)(list) in
 let _ = print(print_list(filtered)) in
