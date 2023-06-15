@@ -58,3 +58,6 @@ Logische Programmiersprache
 Attributgrammatiken
 - Daniel Hans Gabor
 - Milan Littfin
+
+Tail-Recursion
+- Jonas Faxel
