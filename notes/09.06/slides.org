@@ -54,3 +54,7 @@ DSL zum spezifieren und loesen von linearen Gleichungssystemen
 Logische Programmiersprache
 - Leon Pueschel
 - Leander Gerwing
+
+Attributgrammatiken
+- Daniel Hans Gabor
+- Milan Littfin
