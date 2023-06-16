@@ -1,0 +1,128 @@
+#+TITLE: Zehnte Vorlesung
+#+DATE: 16.06.2023 PuC
+* Herzlich Willkommen
+
+* Wiederholung
+
+Type Inference via Unifikation
+
+* Polymorphismus
+
+(Motivation von letzter Woche)
+Es gibt aktuell keinen "richtigen" Typen fuer fn x => x
+Wir haben stattdessen unendlich viele gleich "korrekte":
+- Bool -> Bool
+- (Bool -> Bool) -> (Bool -> Bool)
+- (Bool -> Bool -> Bool) -> (Bool -> Bool -> Bool)
+- ...
+
+Wir wollen stattdessen einen Typen der in etwa so aussieht:
+
+fn x => x : t -> t
+
+Wobei t eine _Typvariable_ ist.
+
+* Binder fuer Typvariablen
+
+Genau wie mit unseren Value-level Variablen brauchen wir einen
+Ort an dem die Typvariable gebunden wird. Dafuer verwenden wir
+syntaktisch das Keyword _forall_ (oder ∀ auf dem Whiteboard).
+
+fn x => x : forall t. t -> t
+
+oder
+
+fn x => x : ∀ t. t -> t
+
+_Wo_ es syntaktisch erlaubt ist eine Typvariable zu binden ist
+ein wichtiger Design-Punkt.
+
+* Polymorphismus erster Ordnung
+
+Wir erlauben Binder fuer Typvariable nur in der _auessersten_ Position eines
+Typs.
+
+Beispiel:
+
+~∀ a. (a -> a) -> a~ ist erlaubt
+~(∀ a. a -> a) -> a~ ist verboten!
+
+Diese Restriktion nennt man Polymorphismus erster Ordnung,
+oder Let-Polymorphismus (Inspiriert durch die SML Programmiersprache).
+
+* (Exkurs) Rank-N-Polymorphism
+
+Maechtigere Typsysteme ohne diese Restriktion erlauben sogennante
+_Rank-N-Types_. Der primaere Grund diese Art von Polymorphismus zu
+verbieten ist, dass er nicht vollstaendig inferierbar ist.
+
+Programmiersprachen _mit_ Rank-N-Polymorphismus:
+Haskell, PureScript, OCaml (ueber Umwege)
+
+* Mono- vs Polytypen
+
+Um diese Restriktion in unserem Compiler umzusetzen trennen wir
+polymorphe Typen strikt von monomorphen.
+
+Wir erweitern unseren bisherigen Type Datentyp um einen Konstruktor
+fuer Typvariablen. Ausserdem benennen wir ihn in _Monotype_ um.
+
+Wir definieren Polytypen als:
+Polytype ::=
+  | Monotype
+  | ∀ a1 ... an. Monotype
+
+* Projektliste
+
+Visualisieren von Lambda Ausdruecken als Baeume
+
+Eine Option: https://d2lang.com/
+- Angela Kolless
+- Luca Brabender
+
+Syntax Highlighting (LSP SemanticTokenProvider)
+- Tim Koehne
+- Fabian Juelich
+
+Rust Borrowchecker (Coding: Rust Beispiele die den Brwck demonstrieren)
+- Julian Heidenreich
+- Marek Dahmen
+
+Transpiler mittels Txl (PuClang -> JS)
+- Justin Dax
+- Rene Haar
+
+Stack Machine with Calls in C
+Literature: (https://craftinginterpreters.com/)
+- Jiyon Park
+- ?
+
+Syntax fuer Listen, std lib fuer Listen, evtl. polymorphe Liste
+- Ronan Hesselschwerdt
+- ?
+
+DSL zum spezifieren und loesen von linearen Gleichungssystemen
+- Sarah Langrehr
+- ?
+
+Logische Programmiersprache
+Recherche: Mini Kanren, Datalog
+- Leon Pueschel
+- Leander Gerwing
+
+Attributgrammatiken
+- Daniel Hans Gabor
+- Milan Littfin
+
+Tail-Recursion
+- Jonas Faxel
+
+Tail-Recursion 2 (Merge?) (Note an mich selbst, E-Mails austauschen)
+- Leon Bartz
+
+Locally Nameless Lambda Calculus
+- Dennis Neufeldt
+
+Parser Kombinatoren
+- Azmi Zaafouri
+- Amen Allah Zinneelabedine

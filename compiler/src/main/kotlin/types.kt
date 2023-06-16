@@ -1,7 +1,8 @@
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentHashMapOf
 
-typealias Context = PersistentMap<String, Type>
+typealias Context = PersistentMap<String, Polytype>
+typealias Solution = Map<Int, Monotype>
 
 class Typechecker {
 
@@ -11,39 +12,43 @@ class Typechecker {
     fun error(msg: String) = errors.add(msg)
 
     var unknownSupply: Int = 0
-    val solution: MutableMap<Int, Type> = mutableMapOf()
+    val solution: MutableMap<Int, Monotype> = mutableMapOf()
 
-    fun freshUnknown(): Type = Type.Unknown(++unknownSupply)
-    fun applySolution(ty: Type): Type {
+    fun freshUnknown(): Monotype = Monotype.Unknown(++unknownSupply)
+    fun applySolution(ty: Monotype, solution: Solution = this.solution): Monotype {
         return when (ty) {
-            Type.Bool, is Type.Constructor, Type.Integer, Type.Text -> ty
-            is Type.Function -> Type.Function(applySolution(ty.arg), applySolution(ty.result))
-            is Type.Unknown -> solution[ty.u]?.let { applySolution(it) } ?: ty
+            Monotype.Bool, is Monotype.Constructor, is Monotype.Var, Monotype.Integer, Monotype.Text -> ty
+            is Monotype.Function -> Monotype.Function(
+                applySolution(ty.arg, solution),
+                applySolution(ty.result, solution)
+            )
+
+            is Monotype.Unknown -> solution[ty.u]?.let { applySolution(it) } ?: ty
         }
     }
 
-    fun equalType(msg: String, actual: Type, expected: Type) {
+    fun equalType(msg: String, actual: Monotype, expected: Monotype) {
         try {
             unify(actual, expected)
-        } catch (e : Error) {
+        } catch (e: Error) {
             error("$msg, ${e.message}")
         }
     }
 
-    fun unify(ty1: Type, ty2: Type) {
+    fun unify(ty1: Monotype, ty2: Monotype) {
         val ty1 = applySolution(ty1)
         val ty2 = applySolution(ty2)
 
         if (ty1 == ty2) return
-        if (ty1 is Type.Function && ty2 is Type.Function) {
+        if (ty1 is Monotype.Function && ty2 is Monotype.Function) {
             unify(ty1.arg, ty2.arg)
             unify(ty1.result, ty2.result)
-        } else if (ty1 is Type.Unknown) {
+        } else if (ty1 is Monotype.Unknown) {
             if (ty2.unknowns().contains(ty1.u)) {
                 throw Error("Can't resolve infinite type ${ty1.print()} ~ ${ty2.print()}")
             }
             solution[ty1.u] = ty2
-        } else if (ty2 is Type.Unknown) {
+        } else if (ty2 is Monotype.Unknown) {
             if (ty1.unknowns().contains(ty2.u)) {
                 throw Error("Can't resolve infinite type ${ty2.print()} ~ ${ty1.print()}")
             }
@@ -53,29 +58,31 @@ class Typechecker {
         }
     }
 
-    fun inferProg(prog: Prog): Pair<Type, List<String>> {
+    fun inferProg(prog: Prog): Pair<Monotype, List<String>> {
         typeDefs = prog.typeDefs
         val builtinCtx: Context = builtIns.fold(persistentHashMapOf()) { acc, def ->
-            acc.put(def.name, def.type)
+            acc.put(def.name, Polytype.fromMono(def.type))
         }
         val ctx: Context = prog.fnDefs.fold(builtinCtx) { acc, def ->
             acc.put(def.name, def.ty)
         }
         prog.fnDefs.forEach { def ->
             val tyExpr = infer(ctx, def.expr)
-            equalType("When inferring a definition", tyExpr, def.ty)
+            equalType("When inferring a definition", tyExpr, instantiate(def.ty))
         }
+        ctx.forEach { println(it.key + " : " + it.value.pretty()) }
+
         val tyProg = infer(ctx, prog.expr)
         return applySolution(tyProg) to errors
     }
 
-    fun infer(ctx: Context, expr: Expr): Type {
+    fun infer(ctx: Context, expr: Expr): Monotype {
         return when (expr) {
             is Expr.App -> {
                 val tyFun = infer(ctx, expr.func)
                 val tyArg = infer(ctx, expr.arg)
                 val tyResult = freshUnknown()
-                equalType("when applying a function", tyFun, Type.Function(tyArg, tyResult))
+                equalType("when applying a function", tyFun, Monotype.Function(tyArg, tyResult))
                 tyResult
             }
 
@@ -84,14 +91,14 @@ class Typechecker {
                     Operator.Add,
                     Operator.Sub,
                     Operator.Mul,
-                    Operator.Div -> Triple(Type.Integer, Type.Integer, Type.Integer)
+                    Operator.Div -> Triple(Monotype.Integer, Monotype.Integer, Monotype.Integer)
 
-                    Operator.Eq -> Triple(Type.Integer, Type.Integer, Type.Bool)
+                    Operator.Eq -> Triple(Monotype.Integer, Monotype.Integer, Monotype.Bool)
 
                     Operator.Or,
-                    Operator.And -> Triple(Type.Bool, Type.Bool, Type.Bool)
+                    Operator.And -> Triple(Monotype.Bool, Monotype.Bool, Monotype.Bool)
 
-                    Operator.Concat -> Triple(Type.Text, Type.Text, Type.Text)
+                    Operator.Concat -> Triple(Monotype.Text, Monotype.Text, Monotype.Text)
                 }
                 val tyLeft = infer(ctx, expr.left)
                 val tyRight = infer(ctx, expr.right)
@@ -103,7 +110,7 @@ class Typechecker {
             is Expr.Builtin -> throw Error("Should not need to infer a Builtin")
             is Expr.If -> {
                 val tyCond = infer(ctx, expr.condition)
-                equalType("In an If condition", tyCond, Type.Bool)
+                equalType("In an If condition", tyCond, Monotype.Bool)
                 val tyThen = infer(ctx, expr.thenBranch)
                 val tyElse = infer(ctx, expr.elseBranch)
                 equalType("In if branches", tyElse, tyThen)
@@ -112,31 +119,33 @@ class Typechecker {
 
             is Expr.Lambda -> {
                 val tyParam = expr.tyParam ?: freshUnknown()
-                val newCtx = ctx.put(expr.param, tyParam)
+                val newCtx = ctx.put(expr.param, Polytype.fromMono(tyParam))
                 val tyBody = infer(newCtx, expr.body)
-                Type.Function(tyParam, tyBody)
+                Monotype.Function(tyParam, tyBody)
             }
 
             is Expr.Let -> {
-                val tyBound = infer(ctx, expr.bound)
+                val tyBound = generalize(ctx, infer(ctx, expr.bound))
+                println(expr.name + " : " + tyBound.pretty())
                 val newCtx = ctx.put(expr.name, tyBound)
                 val tyBody = infer(newCtx, expr.body)
                 tyBody
             }
 
+            is Expr.Var -> ctx[expr.n]?.let { instantiate(it) } ?: throw Error("Unknown variable ${expr.n}")
+
             is Expr.Lit -> when (expr.p) {
-                is Primitive.Bool -> Type.Bool
-                is Primitive.Integer -> Type.Integer
-                is Primitive.Text -> Type.Text
+                is Primitive.Bool -> Monotype.Bool
+                is Primitive.Integer -> Monotype.Integer
+                is Primitive.Text -> Monotype.Text
             }
 
-            is Expr.Var -> ctx[expr.n] ?: throw Error("Unknown variable ${expr.n}")
             is Expr.Construction -> {
                 val tyFields = expr.fields.map { infer(ctx, it) }
                 lookupConstructor(expr.type, expr.name, tyFields).forEach { (actual, expected) ->
                     equalType("", actual, expected)
                 }
-                return Type.Constructor(expr.type)
+                return Monotype.Constructor(expr.type)
             }
 
             is Expr.Case -> {
@@ -152,18 +161,30 @@ class Typechecker {
         }
     }
 
-    private fun matchPattern(ctx: Context, pattern: Pattern, ty: Type): Context {
+    private fun instantiate(ty: Polytype): Monotype {
+        return ty.vars.fold(ty.type) { t, v -> t.substitute(v, freshUnknown()) }
+    }
+
+    private fun generalize(ctx: Context, ty: Monotype): Polytype {
+        val ty = applySolution(ty)
+        val unknowns = ty.unknowns().filterNot { u -> ctx.any { (_, ty) -> ty.unknowns().contains(u) } }
+        val unknownVars = unknowns.zip('a'..'z')
+        val solution: Solution = unknownVars.associate { (u, v) -> u to Monotype.Var(v.toString()) }
+        return Polytype(unknownVars.map { (_, v) -> v.toString() }, applySolution(ty, solution))
+    }
+
+    private fun matchPattern(ctx: Context, pattern: Pattern, ty: Monotype): Context {
         return when (pattern) {
             is Pattern.Constructor -> {
-                equalType("", Type.Constructor(pattern.type), ty)
+                equalType("", Monotype.Constructor(pattern.type), ty)
                 lookupConstructor(pattern.type, pattern.name, pattern.fields).fold(ctx) { acc, (field, ty) ->
-                    acc.put(field, ty)
+                    acc.put(field, Polytype.fromMono(ty))
                 }
             }
         }
     }
 
-    private fun <X> lookupConstructor(type: String, name: String, xs: List<X>): List<Pair<X, Type>> {
+    private fun <X> lookupConstructor(type: String, name: String, xs: List<X>): List<Pair<X, Monotype>> {
         val typeDef = typeDefs.find { it.name == type } ?: throw Error("Unknown type $type")
         val constr = typeDef.constructors.find { it.name == name } ?: throw Error("Unknown constructor $type.$name")
         if (xs.size != constr.fields.size) {

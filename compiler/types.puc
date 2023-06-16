@@ -1,7 +1,9 @@
-type List = Cons(Integer, List) | Nil()
+def <a>twice(f : a -> a, x : a) : a =>
+  f(f(x))
 
-let f = fn x => case List.Cons(3, List.Nil()) {
-  of List.Nil() => x
-  of List.Cons(h, t) => h
-} in
-f(true)
+def <a, b>const(x : a, y : b) : a =>
+  x
+
+let shout = twice(fn s => s ++ "!") in
+let add_two = twice(fn x => x + 1) in
+add_two(10)

@@ -23,7 +23,7 @@ fun closureEval(prog: Prog): Value {
     return Evaluator(prog.fnDefs).eval(emptyEnv, prog.expr)
 }
 
-data class BuiltIn(val name: String, val arity: Int, val type: Type)
+data class BuiltIn(val name: String, val arity: Int, val type: Monotype)
 
 val builtIns = listOf(
     BuiltIn("int_to_string", 1, parseType("Integer -> Text")),
@@ -43,7 +43,7 @@ class Evaluator(fnDefs: List<FnDef>) {
             val value = (2..builtIn.arity)
                 .map { "param$it" }
                 .fold<String, Expr>(Expr.Builtin(builtIn.name)) { acc, param ->
-                    Expr.Lambda(param, Type.Integer, acc)
+                    Expr.Lambda(param, Monotype.Integer, acc)
                 }
             topLevelMut[builtIn.name] = Value.Closure(emptyEnv, "param1", value)
         }

@@ -1,11 +1,12 @@
 data class Prog(val typeDefs: List<TypeDef>, val fnDefs: List<FnDef>, val expr: Expr)
 
-data class FnDef(val name: String, val expr: Expr, val ty: Type)
+data class FnDef(val name: String, val expr: Expr, val ty: Polytype)
 data class TypeDef(val name: String, val constructors: List<TypeConstructor>)
-data class TypeConstructor(val name: String, val fields: List<Type>)
+data class TypeConstructor(val name: String, val fields: List<Monotype>)
 
 sealed class Expr {
-    data class Var(val n: String) : Expr()data class Lambda(val param: String, val tyParam: Type?, val body: Expr) : Expr()
+    data class Var(val n: String) : Expr()
+    data class Lambda(val param: String, val tyParam: Monotype?, val body: Expr) : Expr()
     data class App(val func: Expr, val arg: Expr) : Expr()
     data class If(val condition: Expr, val thenBranch: Expr, val elseBranch: Expr) : Expr()
     data class Binary(val left: Expr, val op: Operator, val right: Expr) : Expr()
@@ -34,13 +35,14 @@ enum class Operator {
     Add, Sub, Mul, Div, Eq, Or, And, Concat
 }
 
-sealed class Type {
-    object Integer : Type()
-    object Text : Type()
-    object Bool : Type()
-    data class Constructor(val name: String) : Type()
-    data class Function(val arg: Type, val result: Type) : Type()
-    data class Unknown(val u: Int) : Type()
+sealed class Monotype {
+    object Integer : Monotype()
+    object Text : Monotype()
+    object Bool : Monotype()
+    data class Constructor(val name: String) : Monotype()
+    data class Var(val name: String) : Monotype()
+    data class Function(val arg: Monotype, val result: Monotype) : Monotype()
+    data class Unknown(val u: Int) : Monotype()
 
     fun print(): String = printInner(false)
 
@@ -50,6 +52,7 @@ sealed class Type {
             Integer -> "Integer"
             Text -> "Text"
             is Constructor -> name
+            is Var -> name
             is Function -> {
                 val inner = "${arg.printInner(true)} -> ${result.printInner(false)}"
                 if (nested) "($inner)" else inner
@@ -59,11 +62,53 @@ sealed class Type {
         }
     }
 
+    fun substitute(v: String, replacement: Monotype): Monotype {
+        return when (this) {
+            Bool, is Constructor, Integer, Text, is Unknown -> this
+            is Function -> Function(arg.substitute(v, replacement), result.substitute(v, replacement))
+            is Var -> if (v == name) { replacement } else { this }
+        }
+    }
+
     fun unknowns(): Set<Int> {
         return when (this) {
-            Bool, is Constructor, Integer, Text -> setOf()
+            Bool, is Constructor, is Var, Integer, Text -> setOf()
             is Function -> arg.unknowns().union(result.unknowns())
             is Unknown -> setOf(u)
         }
     }
 }
+
+data class Polytype(val vars: List<String>, val type: Monotype) {
+    fun unknowns(): Set<Int> = type.unknowns()
+
+    fun pretty(): String {
+        if (vars.isEmpty()) return type.print()
+        return "forall " + vars.joinToString(" ") + ". " + type.print()
+    }
+
+    companion object {
+        fun fromMono(type: Monotype): Polytype {
+            return Polytype(listOf(), type)
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

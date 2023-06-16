@@ -4,7 +4,8 @@ init: prog;
 
 prog: (fnDef | typeDef)* expr;
 
-fnDef: 'def' name=NAME '(' fnParam (',' fnParam)* ')' ':' tyResult=type '=>' body=expr;
+tyVars: '<' (NAME (',' NAME)*)? '>';
+fnDef: 'def' tyVars? name=NAME '(' fnParam (',' fnParam)* ')' ':' tyResult=type '=>' body=expr;
 typeDef: 'type' name=UP_NAME '=' typeConstructor ('|' typeConstructor)*;
 typeConstructor: constr=UP_NAME '(' (type (',' type)*)? ')';
 fnParam: param=NAME ':' tyParam=type;
@@ -40,6 +41,7 @@ type
   | 'Text' # TyText
   | 'Bool' # TyBool
   | '(' inner=type ')' # TyParenthesized
+  | NAME # TyVar
   | UP_NAME # TyConstructor
   | <assoc=right> arg=type '->' result=type # TyFun
   ;

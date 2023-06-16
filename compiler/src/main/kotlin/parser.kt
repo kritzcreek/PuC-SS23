@@ -11,7 +11,7 @@ fun parseFile(fileName: String): Prog {
     return parseInner(lexer)
 }
 
-fun parseType(input: String): Type {
+fun parseType(input: String): Monotype {
     val lexer = PucLexer(CharStreams.fromString(input))
     val tokens = CommonTokenStream(lexer)
     val parser = PucParser(tokens)
@@ -44,8 +44,10 @@ class FnDefVisitor(): PucBaseVisitor<FnDef>() {
         val tyResult = TypeVisitor().visit(ctx.tyResult)
         val body = ExprVisitor().visit(ctx.body)
         val expr = params.reversed().fold(body) { acc, (param, tyParam) -> Expr.Lambda(param, tyParam, acc) }
-        val ty = params.reversed().fold(tyResult) { acc, (_, ty) -> Type.Function(ty, acc) }
-        return FnDef(name, expr, ty)
+
+        val tyVars = ctx.tyVars()?.NAME()?.map { it.text } ?: listOf()
+        val ty = params.reversed().fold(tyResult) { acc, (_, ty) -> Monotype.Function(ty, acc) }
+        return FnDef(name, expr, Polytype(tyVars, ty))
     }
 }
 
@@ -70,32 +72,36 @@ class PatternVisitor(): PucBaseVisitor<Pattern>() {
     }
 }
 
-class TypeVisitor(): PucBaseVisitor<Type>() {
-    override fun visitTyBool(ctx: PucParser.TyBoolContext?): Type {
-        return Type.Bool
+class TypeVisitor(): PucBaseVisitor<Monotype>() {
+    override fun visitTyBool(ctx: PucParser.TyBoolContext?): Monotype {
+        return Monotype.Bool
     }
 
-    override fun visitTyInt(ctx: PucParser.TyIntContext?): Type {
-        return Type.Integer
+    override fun visitTyInt(ctx: PucParser.TyIntContext?): Monotype {
+        return Monotype.Integer
     }
 
-    override fun visitTyText(ctx: PucParser.TyTextContext?): Type {
-        return Type.Text
+    override fun visitTyText(ctx: PucParser.TyTextContext?): Monotype {
+        return Monotype.Text
     }
 
-    override fun visitTyParenthesized(ctx: PucParser.TyParenthesizedContext): Type {
+    override fun visitTyParenthesized(ctx: PucParser.TyParenthesizedContext): Monotype {
         return visit(ctx.inner)
     }
 
-    override fun visitTyConstructor(ctx: PucParser.TyConstructorContext): Type {
+    override fun visitTyConstructor(ctx: PucParser.TyConstructorContext): Monotype {
         val name = ctx.UP_NAME().text
-        return Type.Constructor(name)
+        return Monotype.Constructor(name)
     }
 
-    override fun visitTyFun(ctx: PucParser.TyFunContext): Type {
+    override fun visitTyVar(ctx: PucParser.TyVarContext): Monotype {
+        return Monotype.Var(ctx.NAME().text)
+    }
+
+    override fun visitTyFun(ctx: PucParser.TyFunContext): Monotype {
         val tyArg = visit(ctx.arg)
         val tyResult = visit(ctx.result)
-        return Type.Function(tyArg, tyResult)
+        return Monotype.Function(tyArg, tyResult)
     }
 }
 
