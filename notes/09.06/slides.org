@@ -61,3 +61,10 @@ Attributgrammatiken
 
 Tail-Recursion
 - Jonas Faxel
+
+Locally Nameless Lambda Calculus
+- Dennis Neufeldt
+
+Parser Kombinatoren
+- Azmi Zaafouri
+- Amen Allah Zinneelabedine
